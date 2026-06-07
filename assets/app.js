@@ -1,16 +1,20 @@
-/* Household Sustainability Dashboard — display layer.
+/* Our Sustainability Nest — display layer.
    Reads data.json (falls back to data.js for file:// viewing), renders panels,
    and HIDES any domain that isn't present. No data entry, no storage, no server. */
 
 (function () {
   "use strict";
 
-  const COLORS = {
-    elec: "#5bb8d6", gas: "#e0a93b", propane: "#e0735f",
-    s1: "#e0a93b", s2: "#5bb8d6", mo: "#b58be0",
-    trash: "#8a96a3", recycle: "#5bb8d6", compost: "#4caf7b",
-    green: "#4caf7b", green2: "#7bd6a0", muted: "#9bb0a3", grid: "#2c3a30",
-    cropPalette: ["#4caf7b", "#5bb8d6", "#e0a93b", "#b58be0", "#e0735f", "#7bd6a0", "#8a96a3", "#d6cf5b"],
+  // Soft pastel chart palette
+  const C = {
+    elec: "#6cc8e6", gas: "#ffb877", propane: "#ff9ec7",
+    s1: "#ffb877", s2: "#6cc8e6", mo: "#b79cff",
+    trash: "#c9c2d6", recycle: "#6cc8e6", compost: "#5fd0a8",
+    mint: "#5fd0a8", sky: "#6cc8e6", pink: "#ff9ec7", lav: "#b79cff",
+    peach: "#ffb877", lemon: "#ffd86b", muted: "#9a93ad", grid: "#efeaf5",
+    ink: "#4a4360",
+    pie: ["#6cc8e6", "#ffb877", "#b79cff", "#ff9ec7", "#5fd0a8", "#ffd86b"],
+    crops: ["#5fd0a8", "#6cc8e6", "#ffb877", "#b79cff", "#ff9ec7", "#ffd86b", "#c9c2d6", "#9ad6b4"],
   };
 
   const $ = (id) => document.getElementById(id);
@@ -34,21 +38,28 @@
       );
   }
 
-  // ---- Chart.js shared defaults --------------------------------------------
   function setChartDefaults() {
-    const C = Chart;
-    C.defaults.color = COLORS.muted;
-    C.defaults.font.family = getComputedStyle(document.body).fontFamily;
-    C.defaults.borderColor = COLORS.grid;
-    C.defaults.maintainAspectRatio = false;
-    C.defaults.plugins.legend.labels.boxWidth = 12;
-    C.defaults.plugins.legend.labels.usePointStyle = true;
+    const D = Chart.defaults;
+    D.color = C.muted;
+    D.font.family = getComputedStyle(document.body).fontFamily;
+    D.font.weight = 600;
+    D.borderColor = C.grid;
+    D.maintainAspectRatio = false;
+    D.plugins.legend.labels.boxWidth = 12;
+    D.plugins.legend.labels.usePointStyle = true;
+    D.plugins.tooltip.backgroundColor = "#fff";
+    D.plugins.tooltip.titleColor = C.ink;
+    D.plugins.tooltip.bodyColor = C.ink;
+    D.plugins.tooltip.borderColor = C.grid;
+    D.plugins.tooltip.borderWidth = 1;
+    D.plugins.tooltip.padding = 10;
+    D.plugins.tooltip.cornerRadius = 12;
+    D.plugins.tooltip.titleFont = { weight: 700 };
   }
 
-  const gridScale = (opts = {}) => Object.assign(
-    { grid: { color: COLORS.grid }, ticks: { color: COLORS.muted } }, opts);
+  const axis = (opts = {}) => Object.assign(
+    { grid: { color: C.grid }, ticks: { color: C.muted }, border: { display: false } }, opts);
 
-  // ---- Tabs ----------------------------------------------------------------
   function wireTabs() {
     document.querySelectorAll(".tab").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -58,6 +69,31 @@
         $("view-dashboard").hidden = tab !== "dashboard";
         $("view-journey").hidden = tab !== "journey";
       });
+    });
+  }
+
+  // ---- Sustainability pet (Tamagotchi) -------------------------------------
+  function renderPet(eco) {
+    if (!eco) return;
+    $("pet-card").hidden = false;
+    $("pet-emoji").textContent = eco.emoji || "🌱";
+    $("pet-title").textContent = eco.title || "Sprouty";
+    $("pet-message").textContent = eco.message || "";
+    const ring = $("pet-ring");
+    if (eco.score != null) {
+      ring.style.setProperty("--score", eco.score);
+      $("pet-score").textContent = eco.score + "/100";
+    } else {
+      ring.style.setProperty("--score", 0);
+      $("pet-score").textContent = "—";
+    }
+    const box = $("pet-factors");
+    box.innerHTML = "";
+    (eco.factors || []).forEach((f) => {
+      const row = document.createElement("div");
+      row.className = "pf-row";
+      row.innerHTML = `<span>${f.label}</span><span class="pf-bar"><span class="pf-fill" style="width:${f.pct}%"></span></span>`;
+      box.appendChild(row);
     });
   }
 
@@ -78,7 +114,7 @@
 
     const trendEl = $("hero-trend");
     if (summary.trend_pct == null) {
-      trendEl.innerHTML = `<span class="flat">No prior-year baseline yet to compare.</span>`;
+      trendEl.innerHTML = `<span class="flat">No prior-year baseline yet to compare 🌱</span>`;
       return;
     }
     const dir = summary.trend_direction;
@@ -88,45 +124,116 @@
     const partial = prior && prior.window.months_counted < 12;
     trendEl.innerHTML =
       `<span class="${dir}">${arrow} ${Math.abs(summary.trend_pct)}% ${verb} prior 12 months</span>` +
-      (partial
-        ? `<span class="caveat"> — prior window only has ${prior.window.months_counted} month(s) of data, so treat this as indicative.</span>`
-        : "");
+      (partial ? `<span class="caveat"> — prior window has only ${prior.window.months_counted} month(s), so treat as indicative.</span>` : "");
   }
 
-  // ---- Energy --------------------------------------------------------------
-  function renderEnergy(e) {
+  // ---- How we compare ------------------------------------------------------
+  function renderCompare(summary, energy) {
+    const cmp = summary && summary.comparison;
+    const eui = energy && energy.present ? energy.eui : null;
+    if (!cmp && !(eui && eui.benchmark)) return;
+    $("compare").hidden = false;
+
+    if (cmp) {
+      $("cmp-region").textContent = cmp.region_label || "a typical home";
+      const better = cmp.delta_pct < 0;
+      const el = $("cmp-co2");
+      el.textContent = `${Math.abs(cmp.delta_pct)}% ${better ? "lower" : "higher"}`;
+      el.className = "ci-value " + (better ? "good" : "bad");
+      $("cmp-co2-sub").textContent =
+        `${fmt(cmp.your_annual_kg)} vs ${fmt(cmp.typical_annual_kg)} kg/yr` +
+        (cmp.annualized ? ` (annualized from ${cmp.months_counted} mo)` : "") +
+        (better ? " 🎉" : "");
+    } else {
+      $("cmp-co2").parentElement.style.display = "none";
+    }
+
+    if (eui && eui.benchmark) {
+      const d = eui.delta_pct;
+      const better = d <= 0;
+      const el = $("cmp-eui");
+      el.textContent = `${fmt(eui.value, 1)} kBtu/ft²/yr`;
+      el.className = "ci-value " + (Math.abs(d) <= 5 ? "" : better ? "good" : "bad");
+      const word = Math.abs(d) <= 5 ? "about typical" : `${Math.abs(d)}% ${better ? "below" : "above"} typical`;
+      $("cmp-eui-sub").textContent = `${word} (≈${eui.benchmark} for ${eui.benchmark_label || "a typical home"})`;
+    } else {
+      $("cmp-eui").parentElement.style.display = "none";
+    }
+  }
+
+  // ---- Energy (single unit: kBtu) ------------------------------------------
+  function renderEnergy(e, notes) {
     if (!e || !e.present) return;
     $("panel-energy").hidden = false;
 
     if (e.eui && e.eui.value != null) {
+      const d = e.eui.delta_pct;
+      let chip = "";
+      if (d != null) {
+        const cls = Math.abs(d) <= 5 ? "neutral" : d < 0 ? "good" : "bad";
+        const txt = Math.abs(d) <= 5 ? "≈ typical" : `${d > 0 ? "+" : ""}${d}% vs typical`;
+        chip = ` <span class="chip ${cls}">${txt}</span>`;
+      }
       $("eui-readout").innerHTML =
-        `Site EUI <b>${fmt(e.eui.value, 1)}</b> kBtu/ft²/yr` +
+        `Site EUI <b>${fmt(e.eui.value, 1)}</b> kBtu/ft²/yr${chip}` +
         (e.eui.annualized ? ` <span title="annualized from ${e.eui.months_counted} months">*</span>` : "");
     }
 
-    const datasets = [
-      { label: "Electricity (kWh)", data: e.electricity_kWh, borderColor: COLORS.elec,
-        backgroundColor: COLORS.elec, yAxisID: "y", tension: .3, spanGaps: true, pointRadius: 2 },
-      { label: "Natural gas (therms)", data: e.natural_gas_therms, borderColor: COLORS.gas,
-        backgroundColor: COLORS.gas, yAxisID: "y1", tension: .3, spanGaps: true, pointRadius: 2 },
+    const ds = [
+      { label: "Electricity", data: e.electricity_kbtu, backgroundColor: C.elec, stack: "k" },
+      { label: "Natural gas", data: e.natural_gas_kbtu, backgroundColor: C.gas, stack: "k" },
     ];
-    if (e.propane_gal && e.propane_gal.some((v) => v != null)) {
-      datasets.push({ label: "Propane (gal)", data: e.propane_gal, borderColor: COLORS.propane,
-        backgroundColor: COLORS.propane, yAxisID: "y1", tension: .3, spanGaps: true, pointRadius: 2 });
+    if (e.propane_kbtu && e.propane_kbtu.some((v) => v != null)) {
+      ds.push({ label: "Propane", data: e.propane_kbtu, backgroundColor: C.propane, stack: "k" });
     }
-
     new Chart($("chart-energy"), {
-      type: "line",
-      data: { labels: e.months, datasets },
+      type: "bar",
+      data: { labels: e.months, datasets: ds },
       options: {
         interaction: { mode: "index", intersect: false },
+        borderRadius: 6,
         scales: {
-          x: gridScale({ grid: { display: false } }),
-          y: gridScale({ position: "left", title: { display: true, text: "kWh", color: COLORS.muted } }),
-          y1: gridScale({ position: "right", grid: { drawOnChartArea: false },
-            title: { display: true, text: "therms / gal", color: COLORS.muted } }),
+          x: axis({ stacked: true, grid: { display: false } }),
+          y: axis({ stacked: true, title: { display: true, text: "kBtu", color: C.muted } }),
         },
       },
+    });
+
+    const future = notes && notes.future_actions && notes.future_actions[0];
+    if (future) { $("energy-idea").hidden = false; $("energy-idea").innerHTML = "💡 <b>Idea:</b> " + future; }
+  }
+
+  // ---- Emissions pie -------------------------------------------------------
+  function renderEmissions(summary) {
+    const rows = summary && summary.emissions_by_source;
+    if (!rows || !rows.length) return;
+    $("panel-emissions").hidden = false;
+    const labels = rows.map((r) => r.source);
+    const data = rows.map((r) => r.kg);
+    const colors = rows.map((_, i) => C.pie[i % C.pie.length]);
+    const total = data.reduce((a, b) => a + b, 0);
+
+    new Chart($("chart-emissions"), {
+      type: "doughnut",
+      data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: "#fff", borderWidth: 3 }] },
+      options: {
+        cutout: "58%",
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: (c) => `${c.label}: ${fmt(c.parsed)} kg (${Math.round(c.parsed / total * 100)}%)` } },
+        },
+      },
+    });
+
+    const ul = $("emissions-legend");
+    ul.innerHTML = "";
+    rows.forEach((r, i) => {
+      const li = document.createElement("li");
+      li.innerHTML =
+        `<span class="sw" style="background:${colors[i]}"></span>` +
+        `<span>${r.source} <span class="sc">· ${r.scope}</span></span>` +
+        `<span class="lv">${Math.round(r.kg / total * 100)}%</span>`;
+      ul.appendChild(li);
     });
   }
 
@@ -134,25 +241,24 @@
   function renderWaste(w) {
     if (!w || !w.present) return;
     $("panel-waste").hidden = false;
-
-    if (w.overall_diversion != null) {
+    if (w.overall_diversion != null)
       $("diversion-readout").innerHTML = `Overall diversion <b>${Math.round(w.overall_diversion * 100)}%</b>`;
-    }
 
     new Chart($("chart-waste"), {
       type: "bar",
       data: {
         labels: w.months,
         datasets: [
-          { label: "Trash", data: w.trash_gal, backgroundColor: COLORS.trash, stack: "g" },
-          { label: "Recycle", data: w.recycle_gal, backgroundColor: COLORS.recycle, stack: "g" },
-          { label: "Compost", data: w.compost_gal, backgroundColor: COLORS.compost, stack: "g" },
+          { label: "Trash", data: w.trash_gal, backgroundColor: C.trash, stack: "g" },
+          { label: "Recycle", data: w.recycle_gal, backgroundColor: C.recycle, stack: "g" },
+          { label: "Compost", data: w.compost_gal, backgroundColor: C.compost, stack: "g" },
         ],
       },
       options: {
+        borderRadius: 6,
         scales: {
-          x: gridScale({ stacked: true, grid: { display: false } }),
-          y: gridScale({ stacked: true, title: { display: true, text: "gallons", color: COLORS.muted } }),
+          x: axis({ stacked: true, grid: { display: false } }),
+          y: axis({ stacked: true, title: { display: true, text: "gallons", color: C.muted } }),
         },
       },
     });
@@ -161,13 +267,8 @@
     $("gauge-pct").textContent = w.overall_diversion == null ? "—" : pct + "%";
     new Chart($("chart-diversion"), {
       type: "doughnut",
-      data: {
-        labels: ["Diverted", "Landfill"],
-        datasets: [{ data: [pct, 100 - pct],
-          backgroundColor: [COLORS.green, COLORS.grid], borderWidth: 0 }],
-      },
-      options: { cutout: "72%", rotation: -90, circumference: 180,
-        plugins: { legend: { display: false }, tooltip: { enabled: false } } },
+      data: { labels: ["Diverted", "Landfill"], datasets: [{ data: [pct, 100 - pct], backgroundColor: [C.mint, C.grid], borderWidth: 0 }] },
+      options: { cutout: "72%", rotation: -90, circumference: 180, plugins: { legend: { display: false }, tooltip: { enabled: false } } },
     });
   }
 
@@ -176,25 +277,21 @@
     if (!g || !g.present) return;
     $("panel-garden").hidden = false;
     $("garden-readout").innerHTML = `Total <b>${fmt(g.total_lbs, 1)}</b> lbs`;
-
     const ctx = $("chart-garden");
     let chart;
     const draw = (mode) => {
       const rows = mode === "season" ? g.by_season : g.by_crop;
-      const labels = rows.map((r) => mode === "season" ? r.season : r.crop);
+      const labels = rows.map((r) => (mode === "season" ? r.season : r.crop));
       const data = rows.map((r) => r.lbs);
-      const colors = labels.map((_, i) => COLORS.cropPalette[i % COLORS.cropPalette.length]);
+      const colors = labels.map((_, i) => C.crops[i % C.crops.length]);
       if (chart) chart.destroy();
       chart = new Chart(ctx, {
         type: "bar",
         data: { labels, datasets: [{ label: "lbs", data, backgroundColor: colors }] },
         options: {
-          indexAxis: "y",
+          indexAxis: "y", borderRadius: 6,
           plugins: { legend: { display: false } },
-          scales: {
-            x: gridScale({ title: { display: true, text: "pounds", color: COLORS.muted } }),
-            y: gridScale({ grid: { display: false } }),
-          },
+          scales: { x: axis({ title: { display: true, text: "pounds", color: C.muted } }), y: axis({ grid: { display: false } }) },
         },
       });
     };
@@ -213,49 +310,43 @@
     if (!t || !t.present) return;
     $("panel-transport").hidden = false;
     $("miles-readout").innerHTML =
-      `<span class="num">${fmt(t.miles_not_driven)}</span> miles not driven<br>` +
+      `<span class="num">${fmt(t.miles_not_driven)}</span> miles not driven 🚲<br>` +
       `<span style="color:var(--muted)">${fmt(t.total_ghg_kg)} kg CO₂e from fuel</span>`;
 
     const labels = t.by_mode.map((m) => `${m.mode} (${m.unit})`);
     const amounts = t.by_mode.map((m) => m.amount);
     const ghg = t.by_mode.map((m) => m.ghg_kg);
-    const colors = t.by_mode.map((m) => (m.is_miles ? COLORS.green : COLORS.mo));
+    const colors = t.by_mode.map((m) => (m.is_miles ? C.mint : C.lav));
 
     new Chart($("chart-transport"), {
       type: "bar",
       data: { labels, datasets: [{ label: "amount", data: amounts, backgroundColor: colors }] },
       options: {
+        borderRadius: 6,
         plugins: {
           legend: { display: false },
-          tooltip: { callbacks: {
-            afterLabel: (c) => ghg[c.dataIndex] ? `${fmt(ghg[c.dataIndex])} kg CO₂e` : "≈0 carbon",
-          } },
+          tooltip: { callbacks: { afterLabel: (c) => (ghg[c.dataIndex] ? `${fmt(ghg[c.dataIndex])} kg CO₂e` : "≈0 carbon 💚") } },
         },
-        scales: {
-          x: gridScale({ grid: { display: false } }),
-          y: gridScale({ title: { display: true, text: "gallons / miles", color: COLORS.muted } }),
-        },
+        scales: { x: axis({ grid: { display: false } }), y: axis({ title: { display: true, text: "gallons / miles", color: C.muted } }) },
       },
     });
+
+    if (t.avoided_co2e_kg != null) {
+      $("avoided-box").hidden = false;
+      $("avoided-box").innerHTML =
+        `🌿 By biking instead of driving, you avoided roughly <b>${fmt(t.avoided_co2e_kg)} kg CO₂e</b>` +
+        (t.avoided_basis_mpg ? ` <span style="color:var(--muted)">(vs a ${t.avoided_basis_mpg} mpg car)</span>` : "") + ".";
+    }
   }
 
   // ---- Journey timeline ----------------------------------------------------
   function renderJourney(m) {
     const ol = $("timeline");
-    if (!m || !m.present || !m.events.length) {
-      $("journey-empty").hidden = false;
-      return;
-    }
-    const fmtDate = (iso) => {
-      const d = new Date(iso + "T00:00:00");
-      return d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
-    };
+    if (!m || !m.present || !m.events.length) { $("journey-empty").hidden = false; return; }
+    const fmtDate = (iso) => new Date(iso + "T00:00:00").toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
     m.events.forEach((ev) => {
       const li = document.createElement("li");
-      li.innerHTML =
-        `<div class="t-date">${fmtDate(ev.date)}</div>` +
-        `<div class="t-title"></div>` +
-        (ev.note ? `<div class="t-note"></div>` : "");
+      li.innerHTML = `<div class="t-date">${fmtDate(ev.date)}</div><div class="t-title"></div>` + (ev.note ? `<div class="t-note"></div>` : "");
       li.querySelector(".t-title").textContent = ev.title;
       if (ev.note) li.querySelector(".t-note").textContent = ev.note;
       ol.appendChild(li);
@@ -266,21 +357,24 @@
   function boot(data) {
     setChartDefaults();
     wireTabs();
+    const notes = (data.config_echo && data.config_echo.notes) || {};
 
     const gen = data.generated_at ? new Date(data.generated_at).toLocaleString() : "—";
     $("meta").innerHTML =
-      `Last updated ${gen}<span class="badge">source: ${data.source || "?"}</span>` +
+      `Updated ${gen}<span class="badge">source: ${data.source || "?"}</span>` +
       (data.warnings && data.warnings.length ? `<span class="badge" title="${data.warnings.join("&#10;")}">${data.warnings.length} note(s)</span>` : "");
 
+    renderPet(data.eco_score);
     renderHero(data.summary);
-    renderEnergy(data.energy);
+    renderCompare(data.summary, data.energy);
+    renderEnergy(data.energy, notes);
+    renderEmissions(data.summary);
     renderWaste(data.waste);
     renderGarden(data.garden);
     renderTransport(data.transport);
     renderJourney(data.milestones);
 
-    const anyPanel = (data.domains_present || []).some((d) =>
-      ["energy", "waste", "garden", "transport"].includes(d));
+    const anyPanel = (data.domains_present || []).some((d) => ["energy", "waste", "garden", "transport"].includes(d));
     $("dashboard-empty").hidden = anyPanel;
   }
 

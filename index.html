@@ -3,17 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Household Sustainability Dashboard</title>
+  <meta name="theme-color" content="#fdeef6" />
+  <title>🌱 Our Sustainability Nest</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌱</text></svg>" />
   <link rel="stylesheet" href="assets/style.css" />
 </head>
 <body>
   <header class="site-header">
     <div class="wrap">
-      <h1>Household Sustainability Dashboard</h1>
-      <p class="sub">A read-only view of the family log. Numbers are estimates for tracking trends, not audited inventory.</p>
+      <h1>🌱 Our Sustainability Nest</h1>
+      <p class="sub">A cozy little view of how our home is doing. Numbers are friendly estimates for spotting trends — not an audited inventory. 💚</p>
       <nav class="tabs" role="tablist">
-        <button class="tab is-active" data-tab="dashboard" role="tab">Dashboard</button>
-        <button class="tab" data-tab="journey" role="tab">Journey</button>
+        <button class="tab is-active" data-tab="dashboard" role="tab">🏡 Dashboard</button>
+        <button class="tab" data-tab="journey" role="tab">✨ Journey</button>
       </nav>
       <p class="meta" id="meta"></p>
     </div>
@@ -23,37 +25,78 @@
     <!-- DASHBOARD TAB -->
     <section id="view-dashboard" class="view">
 
-      <!-- Hero: trailing-12 total CO2e + trend -->
-      <section class="hero" id="hero" hidden>
-        <div class="hero-main">
-          <div class="hero-label">Trailing 12-month household CO₂e</div>
+      <div class="top-row">
+        <!-- SUSTAINABILITY PET (Tamagotchi) -->
+        <section class="card pet-card" id="pet-card" hidden>
+          <div class="pet-stage">
+            <div class="pet-buddy" id="pet-emoji">🌱</div>
+            <div class="pet-ring" id="pet-ring"><span id="pet-score">—</span></div>
+          </div>
+          <div class="pet-info">
+            <div class="pet-title" id="pet-title">Sprouty</div>
+            <div class="speech" id="pet-message">Hi! Let's grow together 🌎</div>
+            <div class="pet-factors" id="pet-factors"></div>
+          </div>
+        </section>
+
+        <!-- HERO: trailing-12 CO2e + trend -->
+        <section class="card hero" id="hero" hidden>
+          <div class="hero-label">🌍 Trailing 12-month household CO₂e</div>
           <div class="hero-value"><span id="hero-total">—</span> <span class="unit">kg CO₂e</span></div>
           <div class="hero-trend" id="hero-trend"></div>
           <div class="hero-window" id="hero-window"></div>
-        </div>
-        <div class="hero-breakdown">
-          <div class="bd-row"><span class="dot s2"></span>Scope 2 · electricity <b id="bd-s2">—</b></div>
-          <div class="bd-row"><span class="dot s1"></span>Scope 1 · gas + propane <b id="bd-s1">—</b></div>
-          <div class="bd-row"><span class="dot mo"></span>Mobile · transport <b id="bd-mo">—</b>
-            <span class="note">(reported separately — not a formal GHG-Protocol scope)</span></div>
+          <div class="hero-breakdown">
+            <div class="bd-row"><span class="dot s2"></span>Scope 2 · electricity <b id="bd-s2">—</b></div>
+            <div class="bd-row"><span class="dot s1"></span>Scope 1 · gas + propane <b id="bd-s1">—</b></div>
+            <div class="bd-row"><span class="dot mo"></span>Mobile · transport <b id="bd-mo">—</b></div>
+            <div class="bd-note">Mobile is shown separately — not a formal GHG-Protocol scope.</div>
+          </div>
+        </section>
+      </div>
+
+      <!-- HOW WE COMPARE -->
+      <section class="card compare" id="compare" hidden>
+        <h2>🏡 How we compare</h2>
+        <div class="compare-grid">
+          <div class="compare-item">
+            <div class="ci-label">Yearly footprint vs <span id="cmp-region">a typical home</span></div>
+            <div class="ci-value" id="cmp-co2">—</div>
+            <div class="ci-sub" id="cmp-co2-sub"></div>
+          </div>
+          <div class="compare-item">
+            <div class="ci-label">Home energy intensity (EUI)</div>
+            <div class="ci-value" id="cmp-eui">—</div>
+            <div class="ci-sub" id="cmp-eui-sub"></div>
+          </div>
         </div>
       </section>
 
       <div class="grid">
-        <!-- ENERGY -->
-        <section class="panel" id="panel-energy" hidden>
+        <!-- ENERGY (single unit) -->
+        <section class="card panel" id="panel-energy" hidden>
           <div class="panel-head">
-            <h2>Energy</h2>
+            <h2>⚡ Energy</h2>
             <div class="readout" id="eui-readout"></div>
           </div>
           <div class="chart-box"><canvas id="chart-energy"></canvas></div>
-          <p class="caption">Monthly utility use. Site EUI is delivered energy per ft² per year, from <code>home_sqft</code>.</p>
+          <p class="caption">Everything shown in <b>kBtu</b> (one common unit) so you can see what we use most. Tallest stack = biggest energy hog.</p>
+          <div class="idea" id="energy-idea" hidden></div>
+        </section>
+
+        <!-- EMISSIONS PIE -->
+        <section class="card panel" id="panel-emissions" hidden>
+          <div class="panel-head"><h2>🥧 Emissions by source</h2></div>
+          <div class="pie-split">
+            <div class="pie-box"><canvas id="chart-emissions"></canvas></div>
+            <ul class="pie-legend" id="emissions-legend"></ul>
+          </div>
+          <p class="caption">Trailing 12 months. Where our carbon actually comes from.</p>
         </section>
 
         <!-- WASTE -->
-        <section class="panel" id="panel-waste" hidden>
+        <section class="card panel" id="panel-waste" hidden>
           <div class="panel-head">
-            <h2>Waste</h2>
+            <h2>♻️ Waste</h2>
             <div class="readout" id="diversion-readout"></div>
           </div>
           <div class="panel-split">
@@ -68,9 +111,9 @@
         </section>
 
         <!-- GARDEN -->
-        <section class="panel" id="panel-garden" hidden>
+        <section class="card panel" id="panel-garden" hidden>
           <div class="panel-head">
-            <h2>Garden harvest</h2>
+            <h2>🥕 Garden harvest</h2>
             <div class="readout" id="garden-readout"></div>
             <div class="toggle" id="garden-toggle">
               <button data-mode="crop" class="is-active">By crop</button>
@@ -78,35 +121,36 @@
             </div>
           </div>
           <div class="chart-box"><canvas id="chart-garden"></canvas></div>
-          <p class="caption">Cumulative pounds harvested.</p>
+          <p class="caption">Cumulative pounds harvested. 🌻</p>
         </section>
 
         <!-- TRANSPORT -->
-        <section class="panel" id="panel-transport" hidden>
+        <section class="card panel" id="panel-transport" hidden>
           <div class="panel-head">
-            <h2>Transport</h2>
+            <h2>🚲 Transport</h2>
             <div class="readout big" id="miles-readout"></div>
           </div>
           <div class="chart-box"><canvas id="chart-transport"></canvas></div>
+          <div class="avoided" id="avoided-box" hidden></div>
           <p class="caption">Fuel modes (gal) drive emissions; bike/ebike/transit are tracked in
-            miles and treated as ~zero carbon. Bars show amount; labels show kg CO₂e.</p>
+            miles and treated as ~zero carbon. Bars show amount; hover for kg CO₂e.</p>
         </section>
       </div>
 
-      <p class="empty" id="dashboard-empty" hidden>No data yet. Add rows to the Google Sheet and re-run <code>ingest.py</code>.</p>
+      <p class="empty" id="dashboard-empty" hidden>No data yet 🌱 — add rows to the Google Sheet and run <code>./update.sh</code>.</p>
     </section>
 
     <!-- JOURNEY TAB -->
     <section id="view-journey" class="view" hidden>
-      <h2 class="journey-title">The journey</h2>
-      <p class="journey-sub">Milestones from the log — the narrative spine of the household's sustainability work.</p>
+      <h2 class="journey-title">✨ Our journey</h2>
+      <p class="journey-sub">Milestones from the log — the little wins and big steps along the way. 💕</p>
       <ol class="timeline" id="timeline"></ol>
-      <p class="empty" id="journey-empty" hidden>No milestones logged yet.</p>
+      <p class="empty" id="journey-empty" hidden>No milestones logged yet 🌱</p>
     </section>
   </main>
 
   <footer class="site-footer wrap">
-    <p>Display layer only · data entered manually in a Google Sheet · emission factors &amp; sources in <code>config.json</code>.</p>
+    <p>Made with 💚 · display only · data lives in a Google Sheet · emission factors &amp; sources in <code>config.json</code>.</p>
   </footer>
 
   <script src="assets/chart.umd.min.js"></script>

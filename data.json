@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-07T23:14:05+00:00",
+  "generated_at": "2026-06-07T23:37:06+00:00",
   "source": "sample",
   "config_echo": {
     "home_sqft": 1604,
@@ -13,6 +13,17 @@
       "natural_gas_kgCO2_per_therm": 5.3,
       "propane_kgCO2_per_gal": 5.72,
       "gasoline_kgCO2_per_gal": 8.887
+    },
+    "benchmarks": {
+      "region_label": "a typical U.S. home",
+      "residential_site_eui_kbtu_per_sqft_yr": 47.0,
+      "typical_home_energy_co2e_kg_per_yr": 5500,
+      "typical_vehicle_co2e_kg_per_yr": 4600
+    },
+    "notes": {
+      "future_actions": [
+        "Consider Xcel Energy Windsource / Renewable*Connect for the home \u2014 buying residential wind blocks would offset Scope 2 (electricity) emissions, the biggest slice of our footprint."
+      ]
     }
   },
   "domains_present": [
@@ -28,6 +39,12 @@
       "scope1_kg": 2704,
       "scope2_kg": 3891.84,
       "mobile_kg": 1217.52,
+      "by_source": {
+        "electricity": 3891.84,
+        "natural_gas": 2618.2,
+        "propane": 85.8,
+        "gasoline": 1217.52
+      },
       "window": {
         "start": "2025-06",
         "end": "2026-05",
@@ -39,6 +56,12 @@
       "scope1_kg": 1552.9,
       "scope2_kg": 1493.19,
       "mobile_kg": 0,
+      "by_source": {
+        "electricity": 1493.19,
+        "natural_gas": 1552.9,
+        "propane": 0,
+        "gasoline": 0
+      },
       "window": {
         "start": "2024-06",
         "end": "2025-05",
@@ -46,7 +69,58 @@
       }
     },
     "trend_pct": 156.5,
-    "trend_direction": "up"
+    "trend_direction": "up",
+    "emissions_by_source": [
+      {
+        "source": "Electricity",
+        "scope": "Scope 2",
+        "kg": 3891.84
+      },
+      {
+        "source": "Natural gas",
+        "scope": "Scope 1",
+        "kg": 2618.2
+      },
+      {
+        "source": "Gasoline (transport)",
+        "scope": "Mobile",
+        "kg": 1217.52
+      },
+      {
+        "source": "Propane",
+        "scope": "Scope 1",
+        "kg": 85.8
+      }
+    ],
+    "comparison": {
+      "region_label": "a typical U.S. home",
+      "your_annual_kg": 7813.36,
+      "typical_annual_kg": 10100,
+      "delta_pct": -22.6,
+      "annualized": false,
+      "months_counted": 12
+    }
+  },
+  "eco_score": {
+    "score": 78,
+    "stage": "happy",
+    "emoji": "\ud83c\udf3f",
+    "title": "Happy & growing",
+    "message": "Tighten up energy use to beat a typical home's intensity.",
+    "factors": [
+      {
+        "label": "Diverting waste",
+        "pct": 88
+      },
+      {
+        "label": "Riding, not driving",
+        "pct": 100
+      },
+      {
+        "label": "Efficient home",
+        "pct": 46
+      }
+    ]
   },
   "warnings": [
     "[water] no data rows yet. Skipping \u2014 its panel will be hidden."
@@ -129,6 +203,63 @@
       null,
       null
     ],
+    "electricity_kbtu": [
+      2210.98,
+      2081.32,
+      1951.66,
+      1811.77,
+      1869.78,
+      2391.81,
+      2770.54,
+      2722.78,
+      2129.09,
+      1910.72,
+      2054.02,
+      2234.86,
+      2152.97,
+      2040.38,
+      1910.72,
+      1746.94,
+      1804.95
+    ],
+    "natural_gas_kbtu": [
+      9200,
+      8400,
+      6100,
+      3800,
+      1800,
+      700,
+      500,
+      500,
+      900,
+      3400,
+      6800,
+      9500,
+      8800,
+      7900,
+      5500,
+      3300,
+      1600
+    ],
+    "propane_kbtu": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      1371.78,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
     "monthly_ghg_kg": [
       820.22,
       758.31,
@@ -190,7 +321,10 @@
       "value": 47.78,
       "unit": "kBtu/sqft/yr",
       "months_counted": 12,
-      "annualized": false
+      "annualized": false,
+      "benchmark": 47.0,
+      "benchmark_label": "a typical U.S. home",
+      "delta_pct": 1.7
     }
   },
   "waste": {
@@ -340,7 +474,9 @@
       }
     ],
     "total_ghg_kg": 1217.52,
-    "miles_not_driven": 571
+    "miles_not_driven": 571,
+    "avoided_co2e_kg": 298.5,
+    "avoided_basis_mpg": 17
   },
   "milestones": {
     "present": true,

@@ -124,7 +124,20 @@ committed sample render.)
   `diversion = (recycle_gal + compost_gal) / total_gal`. Labeled a **trend indicator**,
   not a precise %, because volume ≠ mass.
 - **Garden:** cumulative pounds by crop and by meteorological season.
-- **Transport:** per-mode amount + emissions, plus total **miles not driven** (bike + ebike).
+- **Transport:** per-mode amount + emissions, total **miles not driven** (bike + ebike), and
+  **avoided emissions** = miles_not_driven ÷ `transport.avoided_vehicle_mpg` × gasoline factor.
+- **Energy graph:** every fuel is converted to one common unit (**kBtu**) so the stacked
+  bars show what we actually use most.
+- **Emissions pie:** trailing-12 CO₂e split by source (electricity / natural gas / propane /
+  gasoline), each tagged with its GHG-Protocol grouping.
+- **"How we compare":** annual footprint and Site EUI vs editable benchmarks in
+  `config.json → benchmarks` (`a typical home` — EIA RECS EUI + EPA home/vehicle figures).
+  Clearly framed as rough benchmarks, not precise rankings.
+- **Sustainability pet 🌱 (eco-score):** a 0–100 score blended from the available metrics
+  (emissions trend, waste diversion, miles not driven, energy intensity vs benchmark). It
+  drives the cute plant-buddy's mood and tip. Only scores domains that have data.
+- **Ideas note:** `config.json → notes.future_actions` renders as a 💡 callout (e.g. the
+  Xcel Windsource suggestion to offset Scope 2 electricity).
 
 ---
 

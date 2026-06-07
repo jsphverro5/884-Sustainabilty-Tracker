@@ -24,7 +24,21 @@
     "fuel_modes": { "car_gas": "gasoline_kgCO2_per_gal" },
     "miles_modes": ["ebike", "bike", "transit"],
     "miles_not_driven_modes": ["bike", "ebike"],
-    "zero_carbon_modes": ["bike", "ebike", "transit"]
+    "zero_carbon_modes": ["bike", "ebike", "transit"],
+    "avoided_vehicle_mpg": 17
+  },
+
+  "benchmarks": {
+    "region_label": "a typical U.S. home",
+    "residential_site_eui_kbtu_per_sqft_yr": 47.0,
+    "typical_home_energy_co2e_kg_per_yr": 5500,
+    "typical_vehicle_co2e_kg_per_yr": 4600
+  },
+
+  "notes": {
+    "future_actions": [
+      "Consider Xcel Energy Windsource / Renewable*Connect for the home — buying residential wind blocks would offset Scope 2 (electricity) emissions, the biggest slice of our footprint."
+    ]
   },
 
   "data_urls": {
@@ -47,6 +61,14 @@
 
     "gasoline_kgCO2_per_gal": "8.887 kg CO2 per gallon (8,887 g CO2/gal). Source: EPA Greenhouse Gas Equivalencies Calculator - Calculations and References (2025); originates from the EPA/DOT joint National Program rulemaking (May 7, 2010), IPCC 2006 method, assuming 100% oxidation of carbon to CO2.",
 
-    "energy_content_kbtu": "Higher-heating-value energy content used for site EUI (kBtu/sqft/yr). electricity 3.412 kBtu/kWh (1 kWh = 3,412 Btu). natural_gas 100 kBtu/therm (1 therm = 100,000 Btu, by definition). propane 91.452 kBtu/gal (EPA: ~91,452 Btu/gal HHV). Site EUI per ENERGY STAR convention counts delivered site energy, not source energy."
+    "energy_content_kbtu": "Higher-heating-value energy content used for site EUI (kBtu/sqft/yr). electricity 3.412 kBtu/kWh (1 kWh = 3,412 Btu). natural_gas 100 kBtu/therm (1 therm = 100,000 Btu, by definition). propane 91.452 kBtu/gal (EPA: ~91,452 Btu/gal HHV). Site EUI per ENERGY STAR convention counts delivered site energy, not source energy.",
+
+    "benchmarks.residential_site_eui_kbtu_per_sqft_yr": "~47 kBtu/ft2/yr = U.S. average residential site EUI. Source: EIA Residential Energy Consumption Survey (RECS) 2015, ~47,000 Btu/ft2/yr national average across all homes (newer single-family homes are lower, ~27). Rough benchmark for the EUI comparison — adjust toward local/Colorado data if you have it.",
+
+    "benchmarks.typical_home_energy_co2e_kg_per_yr": "5,500 kg CO2e/yr ~= an average U.S. household's home-energy emissions. Approximate, EPA-derived; editable. Used only for the friendly 'vs a typical home' comparison, not for our own inventory math.",
+
+    "benchmarks.typical_vehicle_co2e_kg_per_yr": "4,600 kg CO2e/yr = EPA 'typical passenger vehicle' (4.6 metric tons CO2/yr at 22.2 mpg, 11,500 mi/yr). Source: EPA, Greenhouse Gas Emissions from a Typical Passenger Vehicle.",
+
+    "transport.avoided_vehicle_mpg": "17 mpg = assumed fuel economy of the car those bike/ebike miles replaced (the 4Runner runs ~16-18 mpg). Avoided emissions = miles_not_driven / mpg x gasoline_kgCO2_per_gal. Adjust to the vehicle you'd otherwise have driven."
   }
 }

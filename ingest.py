@@ -131,19 +131,25 @@ def process_energy(df, cfg, warn):
     df = df.drop_duplicates(subset="_m", keep="last")
 
     elec, gas, prop = df["electricity_kWh"], df["natural_gas_therms"], df["propane_gal"]
-    scope2 = elec * ef["electricity_kgCO2e_per_kWh"]                      # electricity
-    scope1 = (gas.fillna(0) * ef["natural_gas_kgCO2_per_therm"]
-              + prop.fillna(0) * ef["propane_kgCO2_per_gal"])            # gas + propane
+    # Per-fuel emissions (kept separate so the dashboard can show a source pie).
+    elec_ghg = elec * ef["electricity_kgCO2e_per_kWh"]                    # Scope 2
+    gas_ghg = gas * ef["natural_gas_kgCO2_per_therm"]                     # Scope 1
+    prop_ghg = prop * ef["propane_kgCO2_per_gal"]                         # Scope 1
+    scope2 = elec_ghg
+    scope1 = gas_ghg.fillna(0) + prop_ghg.fillna(0)
     scope1 = scope1.where(~(gas.isna() & prop.isna()))                   # all-blank -> NaN
     monthly = scope1.fillna(0) + scope2.fillna(0)
     monthly = monthly.where(~(scope1.isna() & scope2.isna()))
 
     months = df["_m"].dt.strftime("%Y-%m").tolist()
 
+    # Per-fuel energy in kBtu — one common unit so the graph shows what dominates.
+    elec_kbtu = elec * ec["electricity_kbtu_per_kWh"]
+    gas_kbtu = gas * ec["natural_gas_kbtu_per_therm"]
+    prop_kbtu = prop * ec["propane_kbtu_per_gal"]
+    kbtu = elec_kbtu.fillna(0) + gas_kbtu.fillna(0) + prop_kbtu.fillna(0)
+
     # Site EUI over the trailing 12 months that carry energy data.
-    kbtu = (elec.fillna(0) * ec["electricity_kbtu_per_kWh"]
-            + gas.fillna(0) * ec["natural_gas_kbtu_per_therm"]
-            + prop.fillna(0) * ec["propane_kbtu_per_gal"])
     last12 = df["_m"] > (df["_m"].max() - pd.DateOffset(months=12))
     k12 = kbtu[last12]
     n = int(last12.sum())
@@ -151,24 +157,36 @@ def process_energy(df, cfg, warn):
     annualized = n < 12
     eui_val = ((k12.sum() / n) * 12 / sqft) if (n and annualized) else (k12.sum() / sqft if n else None)
 
+    bench = cfg.get("benchmarks", {}).get("residential_site_eui_kbtu_per_sqft_yr")
+    eui_delta_pct = (round((eui_val - bench) / bench * 100, 1)
+                     if (eui_val is not None and bench) else None)
+
     return {
         "present": True,
         "months": months,
         "electricity_kWh": [jnum(v) for v in elec],
         "natural_gas_therms": [jnum(v) for v in gas],
         "propane_gal": [jnum(v) for v in prop],
+        "electricity_kbtu": [jnum(v) for v in elec_kbtu],
+        "natural_gas_kbtu": [jnum(v) for v in gas_kbtu],
+        "propane_kbtu": [jnum(v) for v in prop_kbtu],
         "monthly_ghg_kg": [jnum(v) for v in monthly],
         "scope1_kg": [jnum(v) for v in scope1],
         "scope2_kg": [jnum(v) for v in scope2],
-        "_series": {  # internal: month -> (scope1, scope2) for the rollup
-            m: (None if pd.isna(s1) else float(s1), None if pd.isna(s2) else float(s2))
-            for m, s1, s2 in zip(months, scope1, scope2)
+        "_series": {  # internal: month -> per-fuel emissions for the rollup + pie
+            m: {"elec": None if pd.isna(e) else float(e),
+                "gas": None if pd.isna(g) else float(g),
+                "propane": None if pd.isna(p) else float(p)}
+            for m, e, g, p in zip(months, elec_ghg, gas_ghg, prop_ghg)
         },
         "eui": {
             "value": jnum(eui_val),
             "unit": "kBtu/sqft/yr",
             "months_counted": n,
             "annualized": annualized,
+            "benchmark": bench,
+            "benchmark_label": cfg.get("benchmarks", {}).get("region_label"),
+            "delta_pct": eui_delta_pct,
         },
     }
 
@@ -278,11 +296,17 @@ def process_transport(df, cfg, warn):
     miles_not_driven = df.loc[df["mode"].isin(t["miles_not_driven_modes"]), "amount"].sum()
     monthly = df.groupby("_m")["_ghg"].sum()
 
+    # Avoided emissions: gas those bike/ebike miles would have burned in the car.
+    mpg = t.get("avoided_vehicle_mpg")
+    avoided = (miles_not_driven / mpg * ef["gasoline_kgCO2_per_gal"]) if mpg else None
+
     return {
         "present": True,
         "by_mode": by_mode,
         "total_ghg_kg": jnum(df["_ghg"].sum()),
         "miles_not_driven": jnum(miles_not_driven),
+        "avoided_co2e_kg": jnum(avoided),
+        "avoided_basis_mpg": mpg,
         "_series": {m: float(v) for m, v in monthly.items()},  # internal rollup
     }
 
@@ -327,20 +351,104 @@ PROCESSORS = {
 
 
 # --------------------------------------------------------------------------- #
+# Eco-score — the "brain" for the sustainability pet (Tamagotchi)
+# --------------------------------------------------------------------------- #
+def compute_eco_score(domains, summary, cfg):
+    """Blend the available metrics into a 0-100 score + a cute pet state.
+
+    Only scores domains that have data, then renormalizes — so a household with
+    just energy still gets a fair score. Each factor is mapped to 0..1.
+    """
+    def clamp01(x):
+        return max(0.0, min(1.0, x))
+
+    factors = []  # (label, value 0..1, friendly tip when low)
+
+    # Emissions trend: going down is good. Only counts with a real prior baseline
+    # (a partial prior window makes the % misleading, so skip it then).
+    prior = summary.get("prior_12") if summary else None
+    reliable_prior = bool(prior and prior["window"]["months_counted"] >= 6)
+    if summary and summary.get("trend_pct") is not None and reliable_prior:
+        t = summary["trend_pct"]
+        factors.append(("Lowering emissions", clamp01(0.5 - t / 40.0),
+                        "Trim the biggest source to bend the trend down."))
+
+    # Waste diversion.
+    w = domains.get("waste", {})
+    if w.get("present") and w.get("overall_diversion") is not None:
+        factors.append(("Diverting waste", clamp01(w["overall_diversion"] / 0.6),
+                        "Recycle and compost more to divert from the landfill."))
+
+    # Miles not driven (bike/ebike).
+    tr = domains.get("transport", {})
+    if tr.get("present") and tr.get("miles_not_driven") is not None:
+        factors.append(("Riding, not driving", clamp01(tr["miles_not_driven"] / 500.0),
+                        "Swap a few car trips for the bike or ebike."))
+
+    # Energy intensity vs benchmark (lower EUI is better).
+    e = domains.get("energy", {})
+    eui = e.get("eui", {}) if e.get("present") else {}
+    if eui.get("value") is not None and eui.get("benchmark"):
+        ratio = eui["value"] / eui["benchmark"]
+        factors.append(("Efficient home", clamp01((1.2 - ratio) / 0.4),
+                        "Tighten up energy use to beat a typical home's intensity."))
+
+    if not factors:
+        return {"score": None, "stage": "seedling", "emoji": "\U0001F331",
+                "title": "Plant me!", "message": "Add some data and I'll start to grow.",
+                "factors": []}
+
+    score = round(sum(v for _, v, _ in factors) / len(factors) * 100)
+
+    # Map score -> pet stage (a growing plant-buddy).
+    if score >= 80:
+        stage, emoji, title = "thriving", "\U0001F333", "Thriving!"          # deciduous tree
+    elif score >= 60:
+        stage, emoji, title = "happy", "\U0001F33F", "Happy & growing"        # herb
+    elif score >= 40:
+        stage, emoji, title = "sprouting", "\U0001F331", "Sprouting along"    # seedling
+    elif score >= 20:
+        stage, emoji, title = "thirsty", "\U0001FAB4", "A little thirsty"     # potted plant
+    else:
+        stage, emoji, title = "wilting", "\U0001F940", "Needs some love"      # wilted flower
+
+    # Pick the weakest factor as the actionable tip.
+    weakest = min(factors, key=lambda f: f[1])
+    best = max(factors, key=lambda f: f[1])
+    if score >= 80:
+        message = f"You're crushing it — especially {best[0].lower()}. Keep it up!"
+    else:
+        message = weakest[2]
+
+    return {
+        "score": score,
+        "stage": stage,
+        "emoji": emoji,
+        "title": title,
+        "message": message,
+        "factors": [{"label": l, "pct": round(v * 100)} for l, v, _ in factors],
+    }
+
+
+# --------------------------------------------------------------------------- #
 # Household CO2e rollup (trailing 12 vs prior 12)
 # --------------------------------------------------------------------------- #
-def build_summary(energy, transport, warn):
-    """Combine monthly energy (scope1+scope2) and mobile (transport) CO2e."""
+def build_summary(energy, transport, cfg, warn):
+    """Combine monthly energy (per-fuel) and mobile (transport) CO2e."""
     e_series = energy.get("_series", {}) if energy.get("present") else {}
     t_series = transport.get("_series", {}) if transport.get("present") else {}
     months = sorted(set(e_series) | set(t_series))
     if not months:
         return None
 
+    def fuels(m):
+        d = e_series.get(m, {})
+        return d.get("elec"), d.get("gas"), d.get("propane")
+
     def month_total(m):
-        s1, s2 = e_series.get(m, (None, None))
+        e, g, p = fuels(m)
         mob = t_series.get(m)
-        parts = [p for p in (s1, s2, mob) if p is not None]
+        parts = [x for x in (e, g, p, mob) if x is not None]
         return sum(parts) if parts else None
 
     latest = pd.Period(months[-1], "M")
@@ -348,19 +456,22 @@ def build_summary(energy, transport, warn):
     def window(end_period, n=12):
         start = end_period - (n - 1)
         wmonths = [str(end_period - i) for i in range(n)]
-        tot = s1 = s2 = mob = 0.0
+        tot = elec = gas = prop = mob = 0.0
         counted = 0
         for m in wmonths:
             mt = month_total(m)
             if mt is None:
                 continue
             counted += 1
-            es1, es2 = e_series.get(m, (None, None))
-            s1 += es1 or 0; s2 += es2 or 0; mob += t_series.get(m, 0.0)
+            e, g, p = fuels(m)
+            elec += e or 0; gas += g or 0; prop += p or 0
+            mob += t_series.get(m, 0.0)
             tot += mt
         return {
-            "total_kg": jnum(tot), "scope1_kg": jnum(s1),
-            "scope2_kg": jnum(s2), "mobile_kg": jnum(mob),
+            "total_kg": jnum(tot),
+            "scope1_kg": jnum(gas + prop), "scope2_kg": jnum(elec), "mobile_kg": jnum(mob),
+            "by_source": {"electricity": jnum(elec), "natural_gas": jnum(gas),
+                          "propane": jnum(prop), "gasoline": jnum(mob)},
             "window": {"start": str(start), "end": str(end_period),
                        "months_counted": counted},
         }
@@ -375,11 +486,39 @@ def build_summary(energy, transport, warn):
         trend_pct = round((trailing["total_kg"] - prior["total_kg"]) / prior["total_kg"] * 100, 1)
         trend_dir = "down" if trend_pct < -0.5 else "up" if trend_pct > 0.5 else "flat"
 
+    # Emissions-by-source list for the pie (trailing-12, biggest first).
+    src_labels = {"electricity": "Electricity", "natural_gas": "Natural gas",
+                  "propane": "Propane", "gasoline": "Gasoline (transport)"}
+    src_scope = {"electricity": "Scope 2", "natural_gas": "Scope 1",
+                 "propane": "Scope 1", "gasoline": "Mobile"}
+    by_source = [{"source": src_labels[k], "scope": src_scope[k], "kg": v}
+                 for k, v in trailing["by_source"].items() if v]
+    by_source.sort(key=lambda d: d["kg"], reverse=True)
+
+    # Friendly "vs a typical home" comparison.
+    b = cfg.get("benchmarks", {})
+    comparison = None
+    typ_total = (b.get("typical_home_energy_co2e_kg_per_yr", 0)
+                 + b.get("typical_vehicle_co2e_kg_per_yr", 0)) or None
+    if typ_total and trailing["window"]["months_counted"] >= 1:
+        mc = trailing["window"]["months_counted"]
+        annual = trailing["total_kg"] * 12 / mc       # annualize partial windows
+        comparison = {
+            "region_label": b.get("region_label"),
+            "your_annual_kg": jnum(annual),
+            "typical_annual_kg": typ_total,
+            "delta_pct": round((annual - typ_total) / typ_total * 100, 1),
+            "annualized": mc < 12,
+            "months_counted": mc,
+        }
+
     return {
         "trailing_12": trailing,
         "prior_12": prior if has_prior else None,
         "trend_pct": trend_pct,
         "trend_direction": trend_dir,
+        "emissions_by_source": by_source,
+        "comparison": comparison,
     }
 
 
@@ -415,7 +554,8 @@ def main():
         df = load_csv(tab, location, warn)
         domains[tab] = proc(df, cfg, warn) if df is not None else {"present": False}
 
-    summary = build_summary(domains["energy"], domains["transport"], warn)
+    summary = build_summary(domains["energy"], domains["transport"], cfg, warn)
+    eco = compute_eco_score(domains, summary, cfg)
 
     # Strip internal-only keys before serializing.
     for d in domains.values():
@@ -429,9 +569,12 @@ def main():
             "home_sqft": cfg["home_sqft"],
             "waste_container_gal": cfg["waste_container_gal"],
             "emission_factors": cfg["emission_factors"],
+            "benchmarks": cfg.get("benchmarks", {}),
+            "notes": cfg.get("notes", {}),
         },
         "domains_present": present,
         "summary": summary,
+        "eco_score": eco,
         "warnings": list(warn),
         **domains,
     }
