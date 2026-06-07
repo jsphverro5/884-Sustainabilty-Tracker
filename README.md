@@ -97,16 +97,17 @@ A tab that is missing, unreachable, has the wrong headers, or has zero data rows
 
 ---
 
-## ⚠️ One thing to fix on your end: the milestones URL
+## Milestones tab
 
-The `milestones` URL you provided points at the **same `gid` as `transport`**, so its
-published CSV has transport's headers (`date, mode, amount, note`) instead of
-milestones' (`date, title, note`). `ingest.py` detects the header mismatch, **skips
-milestones, and hides the Journey timeline** when run live.
+The original `milestones` URL pointed at the **same `gid` as `transport`** (wrong tab).
+It's now fixed: `config.json → data_urls.milestones` points at the published CSV for the
+milestones tab (`gid=728110704`) in the tracker workbook. That URL is public and returns
+the correct `date, title, note` headers — it just has **no data rows yet**, so on a live
+run `ingest.py` reports "no data rows" and **hides the Journey timeline** until you add
+milestones to the sheet (graceful, no crash).
 
-To fix: publish the real **milestones** tab to CSV and replace
-`config.json → data_urls.milestones` with that URL. (The sample data already uses the
-correct milestones schema, which is why the Journey tab renders in the sample.)
+(The sample data already includes milestones, which is why the Journey tab renders in the
+committed sample render.)
 
 ---
 
