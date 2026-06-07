@@ -1,0 +1,23 @@
+date,mode,amount,note
+2025-09-03,car_gas,15.1,fill-up
+2025-09-10,bike,42,week of 9/8 (Strava)
+2025-09-17,bike,38,
+2025-09-22,car_gas,14.6,
+2025-10-01,ebike,55,commute
+2025-10-08,bike,31,
+2025-10-15,car_gas,16.2,road trip
+2025-11-05,car_gas,15.8,
+2025-11-12,transit,46,bus to airport + RTD
+2025-12-03,car_gas,14.9,
+2025-12-20,car_gas,17.1,holiday travel
+2026-01-14,ebike,28,winter commuting
+2026-02-11,car_gas,15.3,
+2026-03-04,ebike,61,
+2026-03-18,bike,40,
+2026-04-01,car_gas,14.2,fill-up
+2026-04-15,ebike,72,
+2026-04-29,bike,58,
+2026-05-06,car_gas,13.8,
+2026-05-13,bike,66,week of 5/11 (Strava)
+2026-05-20,ebike,80,
+2026-05-27,transit,33,light rail downtown

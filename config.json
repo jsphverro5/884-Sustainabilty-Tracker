@@ -1,0 +1,52 @@
+{
+  "home_sqft": 1604,
+
+  "waste_container_gal": {
+    "trash_bag_gal": 13,
+    "recycle_load_gal": 18,
+    "compost_caddy_gal": 3
+  },
+
+  "emission_factors": {
+    "electricity_kgCO2e_per_kWh": 0.5133,
+    "natural_gas_kgCO2_per_therm": 5.30,
+    "propane_kgCO2_per_gal": 5.72,
+    "gasoline_kgCO2_per_gal": 8.887
+  },
+
+  "energy_content_kbtu": {
+    "electricity_kbtu_per_kWh": 3.412,
+    "natural_gas_kbtu_per_therm": 100.0,
+    "propane_kbtu_per_gal": 91.452
+  },
+
+  "transport": {
+    "fuel_modes": { "car_gas": "gasoline_kgCO2_per_gal" },
+    "miles_modes": ["ebike", "bike", "transit"],
+    "miles_not_driven_modes": ["bike", "ebike"],
+    "zero_carbon_modes": ["bike", "ebike", "transit"]
+  },
+
+  "data_urls": {
+    "energy":     "https://docs.google.com/spreadsheets/d/e/2PACX-1vRE5O9UvU0SA7KJvkoT1NdDa_YLjXzgb9i0mr6Z95QKzdvRa6TbCldKitXjg3S3gA/pub?gid=1468035321&single=true&output=csv",
+    "waste":      "https://docs.google.com/spreadsheets/d/e/2PACX-1vRE5O9UvU0SA7KJvkoT1NdDa_YLjXzgb9i0mr6Z95QKzdvRa6TbCldKitXjg3S3gA/pub?gid=1615352183&single=true&output=csv",
+    "garden":     "https://docs.google.com/spreadsheets/d/e/2PACX-1vRE5O9UvU0SA7KJvkoT1NdDa_YLjXzgb9i0mr6Z95QKzdvRa6TbCldKitXjg3S3gA/pub?gid=2146852733&single=true&output=csv",
+    "transport":  "https://docs.google.com/spreadsheets/d/e/2PACX-1vRE5O9UvU0SA7KJvkoT1NdDa_YLjXzgb9i0mr6Z95QKzdvRa6TbCldKitXjg3S3gA/pub?gid=743041485&single=true&output=csv",
+    "milestones": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRE5O9UvU0SA7KJvkoT1NdDa_YLjXzgb9i0mr6Z95QKzdvRa6TbCldKitXjg3S3gA/pub?gid=743041485&single=true&output=csv",
+    "water":      "https://docs.google.com/spreadsheets/d/e/2PACX-1vRE5O9UvU0SA7KJvkoT1NdDa_YLjXzgb9i0mr6Z95QKzdvRa6TbCldKitXjg3S3gA/pub?gid=681058682&single=true&output=csv"
+  },
+
+  "_sources": {
+    "_note": "JSON has no comment syntax, so every emission/energy factor's provenance lives here. Edit the numbers above; keep these citations in sync. All factors are independently verifiable from the cited EPA documents.",
+
+    "electricity_kgCO2e_per_kWh": "eGRID2022 RMPA (WECC Rockies) subregion CO2e total output emission rate = 1,131.7 lb CO2e/MWh. Converted: 1131.7 lb/MWh x 0.45359237 kg/lb / 1000 kWh/MWh = 0.5133 kg CO2e/kWh. (CO2-only rate is 1,124.9 lb/MWh = 0.5103 kg/kWh.) Source: EPA eGRID2022 Summary Tables, Table 1 'Subregion Output Emission Rates' (released Jan 2024). VERIFY your utility maps to the RMPA subregion before trusting this; if you are on Xcel/Public Service Co of Colorado most of Colorado is RMPA, but confirm.",
+
+    "natural_gas_kgCO2_per_therm": "0.0053 metric tons CO2 per therm = 5.30 kg CO2/therm. CO2 only; adding CH4 + N2O raises it < 0.5%. Source: EPA Greenhouse Gas Equivalencies Calculator - Calculations and References (2025), 'therms of natural gas' factor, derived from 14.43 MMT C/QBtu carbon coefficient at 100% oxidation. Cross-check: EPA GHG Emission Factors Hub 2025, Stationary Combustion (53.06 kg CO2/mmBtu x 0.1 mmBtu/therm = 5.31).",
+
+    "propane_kgCO2_per_gal": "5.72 kg CO2 per gallon (CO2 only). Source: EPA GHG Emission Factors Hub 2025 (Jan 2025), Table 1 Stationary Combustion, Propane. VERIFY against the current Hub spreadsheet; the EPA Equivalencies cylinder-basis figure derives a slightly higher number, so this is the inventory-grade Stationary Combustion value.",
+
+    "gasoline_kgCO2_per_gal": "8.887 kg CO2 per gallon (8,887 g CO2/gal). Source: EPA Greenhouse Gas Equivalencies Calculator - Calculations and References (2025); originates from the EPA/DOT joint National Program rulemaking (May 7, 2010), IPCC 2006 method, assuming 100% oxidation of carbon to CO2.",
+
+    "energy_content_kbtu": "Higher-heating-value energy content used for site EUI (kBtu/sqft/yr). electricity 3.412 kBtu/kWh (1 kWh = 3,412 Btu). natural_gas 100 kBtu/therm (1 therm = 100,000 Btu, by definition). propane 91.452 kBtu/gal (EPA: ~91,452 Btu/gal HHV). Site EUI per ENERGY STAR convention counts delivered site energy, not source energy."
+  }
+}

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Household Sustainability Dashboard</title>
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <h1>Household Sustainability Dashboard</h1>
+      <p class="sub">A read-only view of the family log. Numbers are estimates for tracking trends, not audited inventory.</p>
+      <nav class="tabs" role="tablist">
+        <button class="tab is-active" data-tab="dashboard" role="tab">Dashboard</button>
+        <button class="tab" data-tab="journey" role="tab">Journey</button>
+      </nav>
+      <p class="meta" id="meta"></p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- DASHBOARD TAB -->
+    <section id="view-dashboard" class="view">
+
+      <!-- Hero: trailing-12 total CO2e + trend -->
+      <section class="hero" id="hero" hidden>
+        <div class="hero-main">
+          <div class="hero-label">Trailing 12-month household CO₂e</div>
+          <div class="hero-value"><span id="hero-total">—</span> <span class="unit">kg CO₂e</span></div>
+          <div class="hero-trend" id="hero-trend"></div>
+          <div class="hero-window" id="hero-window"></div>
+        </div>
+        <div class="hero-breakdown">
+          <div class="bd-row"><span class="dot s2"></span>Scope 2 · electricity <b id="bd-s2">—</b></div>
+          <div class="bd-row"><span class="dot s1"></span>Scope 1 · gas + propane <b id="bd-s1">—</b></div>
+          <div class="bd-row"><span class="dot mo"></span>Mobile · transport <b id="bd-mo">—</b>
+            <span class="note">(reported separately — not a formal GHG-Protocol scope)</span></div>
+        </div>
+      </section>
+
+      <div class="grid">
+        <!-- ENERGY -->
+        <section class="panel" id="panel-energy" hidden>
+          <div class="panel-head">
+            <h2>Energy</h2>
+            <div class="readout" id="eui-readout"></div>
+          </div>
+          <div class="chart-box"><canvas id="chart-energy"></canvas></div>
+          <p class="caption">Monthly utility use. Site EUI is delivered energy per ft² per year, from <code>home_sqft</code>.</p>
+        </section>
+
+        <!-- WASTE -->
+        <section class="panel" id="panel-waste" hidden>
+          <div class="panel-head">
+            <h2>Waste</h2>
+            <div class="readout" id="diversion-readout"></div>
+          </div>
+          <div class="panel-split">
+            <div class="chart-box grow"><canvas id="chart-waste"></canvas></div>
+            <div class="gauge-box">
+              <canvas id="chart-diversion"></canvas>
+              <div class="gauge-center"><span id="gauge-pct">—</span></div>
+            </div>
+          </div>
+          <p class="caption">Counts → gallons via container sizes in config. Diversion is a
+            <b>trend indicator</b>, not a precise % — volume isn't mass.</p>
+        </section>
+
+        <!-- GARDEN -->
+        <section class="panel" id="panel-garden" hidden>
+          <div class="panel-head">
+            <h2>Garden harvest</h2>
+            <div class="readout" id="garden-readout"></div>
+            <div class="toggle" id="garden-toggle">
+              <button data-mode="crop" class="is-active">By crop</button>
+              <button data-mode="season">By season</button>
+            </div>
+          </div>
+          <div class="chart-box"><canvas id="chart-garden"></canvas></div>
+          <p class="caption">Cumulative pounds harvested.</p>
+        </section>
+
+        <!-- TRANSPORT -->
+        <section class="panel" id="panel-transport" hidden>
+          <div class="panel-head">
+            <h2>Transport</h2>
+            <div class="readout big" id="miles-readout"></div>
+          </div>
+          <div class="chart-box"><canvas id="chart-transport"></canvas></div>
+          <p class="caption">Fuel modes (gal) drive emissions; bike/ebike/transit are tracked in
+            miles and treated as ~zero carbon. Bars show amount; labels show kg CO₂e.</p>
+        </section>
+      </div>
+
+      <p class="empty" id="dashboard-empty" hidden>No data yet. Add rows to the Google Sheet and re-run <code>ingest.py</code>.</p>
+    </section>
+
+    <!-- JOURNEY TAB -->
+    <section id="view-journey" class="view" hidden>
+      <h2 class="journey-title">The journey</h2>
+      <p class="journey-sub">Milestones from the log — the narrative spine of the household's sustainability work.</p>
+      <ol class="timeline" id="timeline"></ol>
+      <p class="empty" id="journey-empty" hidden>No milestones logged yet.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer wrap">
+    <p>Display layer only · data entered manually in a Google Sheet · emission factors &amp; sources in <code>config.json</code>.</p>
+  </footer>
+
+  <script src="assets/chart.umd.min.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

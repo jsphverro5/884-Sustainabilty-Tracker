@@ -1,0 +1,2 @@
+# Pinned, minimal. Only needed to run ingest.py (the dashboard itself needs nothing).
+pandas==2.2.3

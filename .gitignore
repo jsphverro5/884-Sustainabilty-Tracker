@@ -1,0 +1,12 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Local tooling / scratch
+_raw/
+.DS_Store
+
+# Note: data.json and data.js ARE committed — they hold the sample render so the
+# dashboard works the moment someone opens index.html. Re-running ingest.py
+# overwrites them with real data.
