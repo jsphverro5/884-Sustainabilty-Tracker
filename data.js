@@ -1,5 +1,5 @@
 window.__DASHBOARD_DATA__ = {
-  "generated_at": "2026-06-07T23:12:59+00:00",
+  "generated_at": "2026-06-07T23:14:03+00:00",
   "source": "sample",
   "config_echo": {
     "home_sqft": 1604,
@@ -265,7 +265,7 @@ window.__DASHBOARD_DATA__ = {
   },
   "garden": {
     "present": true,
-    "total_lbs": 39.5,
+    "total_lbs": 41.2,
     "by_crop": [
       {
         "crop": "tomatoes",
@@ -288,6 +288,10 @@ window.__DASHBOARD_DATA__ = {
         "lbs": 2.2
       },
       {
+        "crop": "peppers",
+        "lbs": 1.7
+      },
+      {
         "crop": "radishes",
         "lbs": 0.6
       }
@@ -304,6 +308,10 @@ window.__DASHBOARD_DATA__ = {
       {
         "season": "Spring 2026",
         "lbs": 1.5
+      },
+      {
+        "season": "Summer 2026",
+        "lbs": 1.7
       }
     ]
   },
