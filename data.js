@@ -1,5 +1,5 @@
 window.__DASHBOARD_DATA__ = {
-  "generated_at": "2026-06-07T22:52:09+00:00",
+  "generated_at": "2026-06-07T23:12:59+00:00",
   "source": "sample",
   "config_echo": {
     "home_sqft": 1604,
