@@ -142,8 +142,9 @@
       el.className = "ci-value " + (better ? "good" : "bad");
       $("cmp-co2-sub").textContent =
         `${fmt(cmp.your_annual_kg)} vs ${fmt(cmp.typical_annual_kg)} kg/yr` +
-        (cmp.annualized ? ` (annualized from ${cmp.months_counted} mo)` : "") +
-        (better ? " 🎉" : "");
+        (cmp.covers ? ` · ${cmp.covers}${cmp.partial ? " only" : ""}` : "") +
+        (cmp.annualized ? ` · annualized from ${cmp.months_counted} mo` : "") +
+        (better && !cmp.partial ? " 🎉" : "");
     } else {
       $("cmp-co2").parentElement.style.display = "none";
     }

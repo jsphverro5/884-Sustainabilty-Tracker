@@ -1,6 +1,6 @@
 window.__DASHBOARD_DATA__ = {
-  "generated_at": "2026-06-07T23:37:06+00:00",
-  "source": "sample",
+  "generated_at": "2026-06-08T03:47:12+00:00",
+  "source": "live",
   "config_echo": {
     "home_sqft": 1604,
     "waste_container_gal": {
@@ -27,113 +27,75 @@ window.__DASHBOARD_DATA__ = {
     }
   },
   "domains_present": [
-    "energy",
-    "waste",
-    "garden",
-    "transport",
-    "milestones"
+    "energy"
   ],
   "summary": {
     "trailing_12": {
-      "total_kg": 7813.36,
-      "scope1_kg": 2704,
-      "scope2_kg": 3891.84,
-      "mobile_kg": 1217.52,
-      "by_source": {
-        "electricity": 3891.84,
-        "natural_gas": 2618.2,
-        "propane": 85.8,
-        "gasoline": 1217.52
-      },
-      "window": {
-        "start": "2025-06",
-        "end": "2026-05",
-        "months_counted": 12
-      }
-    },
-    "prior_12": {
-      "total_kg": 3046.09,
-      "scope1_kg": 1552.9,
-      "scope2_kg": 1493.19,
+      "total_kg": 7733.36,
+      "scope1_kg": 2899.1,
+      "scope2_kg": 4834.26,
       "mobile_kg": 0,
       "by_source": {
-        "electricity": 1493.19,
-        "natural_gas": 1552.9,
+        "electricity": 4834.26,
+        "natural_gas": 2899.1,
         "propane": 0,
         "gasoline": 0
       },
       "window": {
-        "start": "2024-06",
-        "end": "2025-05",
-        "months_counted": 5
+        "start": "2025-06",
+        "end": "2026-05",
+        "months_counted": 11
       }
     },
-    "trend_pct": 156.5,
-    "trend_direction": "up",
+    "prior_12": null,
+    "trend_pct": null,
+    "trend_direction": null,
     "emissions_by_source": [
       {
         "source": "Electricity",
         "scope": "Scope 2",
-        "kg": 3891.84
+        "kg": 4834.26
       },
       {
         "source": "Natural gas",
         "scope": "Scope 1",
-        "kg": 2618.2
-      },
-      {
-        "source": "Gasoline (transport)",
-        "scope": "Mobile",
-        "kg": 1217.52
-      },
-      {
-        "source": "Propane",
-        "scope": "Scope 1",
-        "kg": 85.8
+        "kg": 2899.1
       }
     ],
     "comparison": {
       "region_label": "a typical U.S. home",
-      "your_annual_kg": 7813.36,
-      "typical_annual_kg": 10100,
-      "delta_pct": -22.6,
-      "annualized": false,
-      "months_counted": 12
+      "your_annual_kg": 8436.39,
+      "typical_annual_kg": 5500,
+      "delta_pct": 53.4,
+      "annualized": true,
+      "months_counted": 11,
+      "covers": "home energy",
+      "partial": true
     }
   },
   "eco_score": {
-    "score": 78,
-    "stage": "happy",
-    "emoji": "\ud83c\udf3f",
-    "title": "Happy & growing",
-    "message": "Tighten up energy use to beat a typical home's intensity.",
+    "score": null,
+    "stage": "seedling",
+    "emoji": "\ud83c\udf31",
+    "title": "Just getting started",
+    "message": "I only see one kind of data so far \u2014 add waste, garden, and transport and I'll really come to life! \ud83c\udf31",
     "factors": [
       {
-        "label": "Diverting waste",
-        "pct": 88
-      },
-      {
-        "label": "Riding, not driving",
-        "pct": 100
-      },
-      {
         "label": "Efficient home",
-        "pct": 46
+        "pct": 0
       }
     ]
   },
   "warnings": [
+    "[waste] no data rows yet. Skipping \u2014 its panel will be hidden.",
+    "[garden] no data rows yet. Skipping \u2014 its panel will be hidden.",
+    "[transport] no data rows yet. Skipping \u2014 its panel will be hidden.",
+    "[milestones] no data rows yet. Skipping \u2014 its panel will be hidden.",
     "[water] no data rows yet. Skipping \u2014 its panel will be hidden."
   ],
   "energy": {
     "present": true,
     "months": [
-      "2025-01",
-      "2025-02",
-      "2025-03",
-      "2025-04",
-      "2025-05",
-      "2025-06",
       "2025-07",
       "2025-08",
       "2025-09",
@@ -147,42 +109,30 @@ window.__DASHBOARD_DATA__ = {
       "2026-05"
     ],
     "electricity_kWh": [
-      648,
-      610,
-      572,
-      531,
-      548,
-      701,
+      1004,
+      770,
+      656,
+      831,
       812,
-      798,
-      624,
-      560,
-      602,
-      655,
-      631,
-      598,
-      560,
-      512,
-      529
+      926,
+      1128,
+      863,
+      840,
+      813,
+      775
     ],
     "natural_gas_therms": [
-      92,
-      84,
-      61,
+      0,
+      0,
+      0,
+      39,
+      104,
+      87,
+      139,
+      80,
+      41,
       38,
-      18,
-      7,
-      5,
-      5,
-      9,
-      34,
-      68,
-      95,
-      88,
-      79,
-      55,
-      33,
-      16
+      19
     ],
     "propane_gal": [
       null,
@@ -192,54 +142,36 @@ window.__DASHBOARD_DATA__ = {
       null,
       null,
       null,
-      15,
       null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null
+      0,
+      0,
+      0
     ],
     "electricity_kbtu": [
-      2210.98,
-      2081.32,
-      1951.66,
-      1811.77,
-      1869.78,
-      2391.81,
+      3425.65,
+      2627.24,
+      2238.27,
+      2835.37,
       2770.54,
-      2722.78,
-      2129.09,
-      1910.72,
-      2054.02,
-      2234.86,
-      2152.97,
-      2040.38,
-      1910.72,
-      1746.94,
-      1804.95
+      3159.51,
+      3848.74,
+      2944.56,
+      2866.08,
+      2773.96,
+      2644.3
     ],
     "natural_gas_kbtu": [
-      9200,
-      8400,
-      6100,
+      0,
+      0,
+      0,
+      3900,
+      10400,
+      8700,
+      13900,
+      8000,
+      4100,
       3800,
-      1800,
-      700,
-      500,
-      500,
-      900,
-      3400,
-      6800,
-      9500,
-      8800,
-      7900,
-      5500,
-      3300,
-      1600
+      1900
     ],
     "propane_kbtu": [
       null,
@@ -249,269 +181,71 @@ window.__DASHBOARD_DATA__ = {
       null,
       null,
       null,
-      1371.78,
       null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null
+      0,
+      0,
+      0
     ],
     "monthly_ghg_kg": [
-      820.22,
-      758.31,
-      616.91,
-      473.96,
-      376.69,
-      396.92,
-      443.3,
-      521.91,
-      368,
-      467.65,
-      669.41,
-      839.71,
-      790.29,
-      725.65,
-      578.95,
-      437.71,
-      356.34
+      515.35,
+      395.24,
+      336.72,
+      633.25,
+      968,
+      936.42,
+      1315.7,
+      866.98,
+      648.47,
+      618.71,
+      498.51
     ],
     "scope1_kg": [
-      487.6,
-      445.2,
-      323.3,
+      0,
+      0,
+      0,
+      206.7,
+      551.2,
+      461.1,
+      736.7,
+      424,
+      217.3,
       201.4,
-      95.4,
-      37.1,
-      26.5,
-      112.3,
-      47.7,
-      180.2,
-      360.4,
-      503.5,
-      466.4,
-      418.7,
-      291.5,
-      174.9,
-      84.8
+      100.7
     ],
     "scope2_kg": [
-      332.62,
-      313.11,
-      293.61,
-      272.56,
-      281.29,
-      359.82,
+      515.35,
+      395.24,
+      336.72,
+      426.55,
       416.8,
-      409.61,
-      320.3,
-      287.45,
-      309.01,
-      336.21,
-      323.89,
-      306.95,
-      287.45,
-      262.81,
-      271.54
+      475.32,
+      579,
+      442.98,
+      431.17,
+      417.31,
+      397.81
     ],
     "eui": {
-      "value": 47.78,
+      "value": 59.06,
       "unit": "kBtu/sqft/yr",
-      "months_counted": 12,
-      "annualized": false,
+      "months_counted": 11,
+      "annualized": true,
       "benchmark": 47.0,
       "benchmark_label": "a typical U.S. home",
-      "delta_pct": 1.7
+      "delta_pct": 25.7
     }
   },
   "waste": {
-    "present": true,
-    "months": [
-      "2025-09",
-      "2025-10",
-      "2025-11",
-      "2025-12",
-      "2026-01",
-      "2026-02",
-      "2026-03",
-      "2026-04",
-      "2026-05"
-    ],
-    "trash_gal": [
-      65,
-      65,
-      104,
-      91,
-      52,
-      39,
-      39,
-      39,
-      39
-    ],
-    "recycle_gal": [
-      36,
-      54,
-      72,
-      54,
-      36,
-      36,
-      54,
-      54,
-      72
-    ],
-    "compost_gal": [
-      0,
-      0,
-      0,
-      0,
-      9,
-      18,
-      21,
-      27,
-      51
-    ],
-    "total_gal": [
-      101,
-      119,
-      176,
-      145,
-      97,
-      93,
-      114,
-      120,
-      162
-    ],
-    "monthly_diversion": [
-      0.36,
-      0.45,
-      0.41,
-      0.37,
-      0.46,
-      0.58,
-      0.66,
-      0.68,
-      0.76
-    ],
-    "overall_diversion": 0.53
+    "present": false
   },
   "garden": {
-    "present": true,
-    "total_lbs": 39.5,
-    "by_crop": [
-      {
-        "crop": "tomatoes",
-        "lbs": 17.1
-      },
-      {
-        "crop": "squash",
-        "lbs": 11.3
-      },
-      {
-        "crop": "zucchini",
-        "lbs": 5.5
-      },
-      {
-        "crop": "lettuce",
-        "lbs": 2.8
-      },
-      {
-        "crop": "cucumbers",
-        "lbs": 2.2
-      },
-      {
-        "crop": "radishes",
-        "lbs": 0.6
-      }
-    ],
-    "by_season": [
-      {
-        "season": "Summer 2025",
-        "lbs": 24.6
-      },
-      {
-        "season": "Fall 2025",
-        "lbs": 13.4
-      },
-      {
-        "season": "Spring 2026",
-        "lbs": 1.5
-      }
-    ]
+    "present": false
   },
   "transport": {
-    "present": true,
-    "by_mode": [
-      {
-        "mode": "car_gas",
-        "unit": "gal",
-        "amount": 137,
-        "ghg_kg": 1217.52,
-        "is_miles": false
-      },
-      {
-        "mode": "bike",
-        "unit": "mi",
-        "amount": 275,
-        "ghg_kg": 0,
-        "is_miles": true
-      },
-      {
-        "mode": "ebike",
-        "unit": "mi",
-        "amount": 296,
-        "ghg_kg": 0,
-        "is_miles": true
-      },
-      {
-        "mode": "transit",
-        "unit": "mi",
-        "amount": 79,
-        "ghg_kg": 0,
-        "is_miles": true
-      }
-    ],
-    "total_ghg_kg": 1217.52,
-    "miles_not_driven": 571,
-    "avoided_co2e_kg": 298.5,
-    "avoided_basis_mpg": 17
+    "present": false
   },
   "milestones": {
-    "present": true,
-    "events": [
-      {
-        "date": "2025-06-15",
-        "title": "Planted first raised beds",
-        "note": "Three 4x8 beds \u2014 tomatoes, squash, greens"
-      },
-      {
-        "date": "2025-08-08",
-        "title": "First canning batch",
-        "note": "Put up 12 jars of tomato sauce from the garden"
-      },
-      {
-        "date": "2025-10-01",
-        "title": "Switched commute to ebike",
-        "note": "Replaced ~2 car trips/week"
-      },
-      {
-        "date": "2026-01-10",
-        "title": "Started curbside composting",
-        "note": "Countertop caddy + curbside pickup"
-      },
-      {
-        "date": "2026-03-15",
-        "title": "LED retrofit complete",
-        "note": "Swapped remaining bulbs to LED"
-      },
-      {
-        "date": "2026-05-01",
-        "title": "Spring garden expansion",
-        "note": "Added a fourth bed and a trellis"
-      }
-    ]
+    "present": false
   },
   "water": {
     "present": false

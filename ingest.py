@@ -92,20 +92,26 @@ def to_num(series: pd.Series) -> pd.Series:
     return pd.to_numeric(series, errors="coerce")
 
 
-def parse_month(series: pd.Series, tab: str, warn: Warnings) -> pd.Series:
-    dt = pd.to_datetime(series, format="%Y-%m", errors="coerce")
-    bad = int(dt.isna().sum())
+def _parse_dt(series: pd.Series, tab: str, warn: Warnings, label: str) -> pd.Series:
+    """Tolerant date parsing. Google Sheets exports vary (YYYY-MM vs YYYY/MM,
+    sometimes with a day), so we normalize separators and parse flexibly rather
+    than dropping rows over a slash. Truly unparseable values are flagged."""
+    s = (series.astype("string").str.strip()
+         .str.replace("/", "-", regex=False)
+         .replace({"": pd.NA, "nan": pd.NA, "NaT": pd.NA, "None": pd.NA}))
+    dt = pd.to_datetime(s, format="mixed", errors="coerce")
+    bad = int((dt.isna() & s.notna()).sum())
     if bad:
-        warn.add(f"[{tab}] {bad} row(s) had an unparseable month (expected YYYY-MM); dropped.")
+        warn.add(f"[{tab}] {bad} row(s) had an unparseable {label}; dropped.")
     return dt
+
+
+def parse_month(series: pd.Series, tab: str, warn: Warnings) -> pd.Series:
+    return _parse_dt(series, tab, warn, "month (expected YYYY-MM)")
 
 
 def parse_date(series: pd.Series, tab: str, warn: Warnings) -> pd.Series:
-    dt = pd.to_datetime(series, format="%Y-%m-%d", errors="coerce")
-    bad = int(dt.isna().sum())
-    if bad:
-        warn.add(f"[{tab}] {bad} row(s) had an unparseable date (expected YYYY-MM-DD); dropped.")
-    return dt
+    return _parse_dt(series, tab, warn, "date (expected YYYY-MM-DD)")
 
 
 def jnum(x):
@@ -398,6 +404,15 @@ def compute_eco_score(domains, summary, cfg):
                 "title": "Plant me!", "message": "Add some data and I'll start to grow.",
                 "factors": []}
 
+    # With only one signal we can't fairly judge overall sustainability — show an
+    # encouraging "getting started" state instead of a harsh verdict.
+    if len(factors) < 2:
+        return {"score": None, "stage": "seedling", "emoji": "\U0001F331",
+                "title": "Just getting started",
+                "message": "I only see one kind of data so far — add waste, garden, and "
+                           "transport and I'll really come to life! 🌱",
+                "factors": [{"label": l, "pct": round(v * 100)} for l, v, _ in factors]}
+
     score = round(sum(v for _, v, _ in factors) / len(factors) * 100)
 
     # Map score -> pet stage (a growing plant-buddy).
@@ -495,11 +510,18 @@ def build_summary(energy, transport, cfg, warn):
                  for k, v in trailing["by_source"].items() if v]
     by_source.sort(key=lambda d: d["kg"], reverse=True)
 
-    # Friendly "vs a typical home" comparison.
+    # Friendly "vs a typical home" comparison. Only count the benchmark pieces we
+    # actually measure, so an energy-only dataset isn't compared against a
+    # household that also includes a car (which would flatter us unfairly).
     b = cfg.get("benchmarks", {})
     comparison = None
-    typ_total = (b.get("typical_home_energy_co2e_kg_per_yr", 0)
-                 + b.get("typical_vehicle_co2e_kg_per_yr", 0)) or None
+    typ_total = 0
+    scope_bits = []
+    if e_series:
+        typ_total += b.get("typical_home_energy_co2e_kg_per_yr", 0); scope_bits.append("home energy")
+    if t_series:
+        typ_total += b.get("typical_vehicle_co2e_kg_per_yr", 0); scope_bits.append("driving")
+    typ_total = typ_total or None
     if typ_total and trailing["window"]["months_counted"] >= 1:
         mc = trailing["window"]["months_counted"]
         annual = trailing["total_kg"] * 12 / mc       # annualize partial windows
@@ -510,6 +532,8 @@ def build_summary(energy, transport, cfg, warn):
             "delta_pct": round((annual - typ_total) / typ_total * 100, 1),
             "annualized": mc < 12,
             "months_counted": mc,
+            "covers": " + ".join(scope_bits),   # what the comparison includes
+            "partial": len(scope_bits) < 2,     # true until both energy + transport exist
         }
 
     return {
